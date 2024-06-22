@@ -14,18 +14,18 @@ int main()
 	double FuncRef[21], FuncCalculada[500], tempRes[21], somatoria = 0;
 
 	double cumulativeProb[500], totalFitness = 0, randValue;
-	double Population[POPULATION_SIZE][6], NextPopulation[POPULATION_SIZE][6];
+	double Population[POPULATION_SIZE][6], NextPopulation[POPULATION_SIZE][4];
 	// A ultima casa, vai ser apenas para armazenar puntuações de fitness
 
-	// insere os dados aleatórios da população
 	srand(time(NULL));
 
+	// insere os dados aleatórios da população
 	for (int i = 0; i < POPULATION_SIZE; i++)
 	{
 		for (int j = 0; j < nCromosomos; j++)
 		{
 			Population[i][j] = 2.0 * ((float)rand() / (float)RAND_MAX) - 1.0;
-			// printf("Population[%d][%d] = %.4lf \n", i, j, Population[i][j]);
+			
 		}
 	}
 
@@ -33,24 +33,22 @@ int main()
 	int u = 0;
 	for (float x = -1; x < 1.1; x += 0.1)
 	{
-		/*printf("x = [%.2f] \n", x);
-		printf("u = [%.2d] \n", u);*/
-
 		FuncRef[u] = -0.3 + 0.1 * x - 0.5 * x * x + 0.4 * x * x * x;
 		u++;
 	}
 	// finaliza com u=20 mas como começa em u=0, temos 21 ciclos
 
-	for (int w = 0; w < INTERATIONS; w++)
+	for (int w = 0; w < 50; w++)
 	{
 		/*Agora vamos a usar o RMSE avaliar a nossa população,
 		lembrando que o RMSE vai nos dar um numero, este numero quanto mais perto de zero melhor*/
 		for (int i = 0; i < POPULATION_SIZE; i++)
 		{
 			u = 0;
+			somatoria = 0; // Resetar somatoria para cada cromossomo
 			for (float x = -1; x < 1.1; x += 0.1)
 			{
-				tempRes[u] = Population[i][0] + Population[i][1] * x - Population[i][2] * x * x + Population[i][3] * x * x * x;
+				tempRes[u] = Population[i][0] + Population[i][1] * x + Population[i][2] * x * x + Population[i][3] * x * x * x;
 				// printf("TempRes [%d] = %.3lf \n", u, tempRes[u]);
 				u++;
 			}
@@ -58,15 +56,15 @@ int main()
 			// calculo de RMSE
 			for (int z = 0; z < 21; z++)
 			{
-				somatoria += (FuncRef[z] - tempRes[z]);
+				somatoria += pow(FuncRef[z] - tempRes[z], 2);
 			}
-			somatoria = somatoria / 21;
-			// calcula media fitness entre os 21 valores de comparação
+			double rmse = sqrt(somatoria / 21);
 
 			// a index 4 é para armazenar os valores de fitness
-			Population[i][4] = sqrt((pow(somatoria, 2) / POPULATION_SIZE));
-			// printf("Population[%d][4] = %lf \n",i, Population[i][4]);
+			Population[i][4] = rmse;
 			Population[i][5] = 1 - Population[i][4];
+
+			// printf("Population[%d][4] = %lf \n",i, Population[i][4]);
 			// printf("Population[%d][5] = %lf \n", i, Population[i][5]);
 
 			// aqui temos a somatoria dos valores de fitness para utilizar no sorteio via roleta viciada
@@ -105,6 +103,7 @@ int main()
 					break;
 				}
 			}
+
 			/*printf("Pai1 = %d \nPai2 = %d\n", pai1, pai2);
 			printf("================\n");*/
 
@@ -194,27 +193,25 @@ int main()
 				NextPopulation[contador + 1][3] = Population[pai2][3];
 			}
 
-			// zerando as avaliações RMSE
-			if (w < 999)
-			{
-				NextPopulation[contador][4] = 0;
-				NextPopulation[contador][5] = 0;
-				NextPopulation[contador + 1][4] = 0;
-				NextPopulation[contador + 1][5] = 0;
-			}
 
 				contador += 2;
 		}
+
 		// copiando a proxima geração para gerar o loop seguinte
 		for (int i = 0; i < POPULATION_SIZE; i++)
 		{
-			for (int j = 0; j < 6; j++)
+			for (int j = 0; j < 4; j++)
 			{
 				Population[i][j] = NextPopulation[i][j];
 			}
 		}
 	}
 	
+	for (int h = 0; h < POPULATION_SIZE; h++)
+	{
+		printf("Population[%d] = [%.4lf][%.4lf][%.4lf][%.4lf][%.4lf][%.4lf]\n", h, Population[h][0], Population[h][1], Population[h][2], Population[h][3], Population[h][4], Population[h][5]);
+	}
+
 	
 	
 	int melhorIndice = 1;
@@ -224,7 +221,7 @@ int main()
 			melhorIndice = Population[i][4];
 		}
 	}
-	printf("Population[400][4] = %.4lf\n", Population[400][4]);
+	/*printf("Population[400][4] = %.4lf\n", Population[400][4]);
 	printf("melhor avaliado: %d\n", melhorIndice);
-	printf("%.4lf + %.4lfX - %.4lfX^2 + %.4lfX^3\n", Population[melhorIndice][3], Population[melhorIndice][2], Population[melhorIndice][1], Population[melhorIndice][0]);
+	printf("%.4lf + %.4lfX - %.4lfX^2 + %.4lfX^3\n", Population[melhorIndice][3], Population[melhorIndice][2], Population[melhorIndice][1], Population[melhorIndice][0]);*/
 }
