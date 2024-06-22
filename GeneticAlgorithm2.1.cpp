@@ -127,6 +127,7 @@ int main()
 			}
 
 			// Fazendo o cruzamento
+			//pai1
 			if (crossOver[0] == 1)
 			{
 				NextPopulation[contador][0] = Population[pai1][0];
@@ -160,6 +161,7 @@ int main()
 				NextPopulation[contador][3] = Population[pai2][3];
 			}
 
+			//pai2
 			if (crossOverInv[0] == 1)
 			{
 				NextPopulation[contador + 1][0] = Population[pai1][0];
