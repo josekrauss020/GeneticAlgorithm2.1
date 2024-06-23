@@ -9,9 +9,9 @@
 int main()
 {
 	int nCromosomos = 4, pai1, pai2, crossOver[4], crossOverInv[4];
-	float mutationRate, selectionPorcentage;
+	float selectionPorcentage;
 	float popFitness[500];
-	double FuncRef[21], FuncCalculada[500], tempRes[21], somatoria = 0;
+	double FuncRef[21], FuncCalculada[500], tempRes[21], somatoria = 0,aleat1,aleat2;
 
 	double cumulativeProb[500], totalFitness = 0, randValue;
 	double Population[POPULATION_SIZE][6], NextPopulation[POPULATION_SIZE][4];
@@ -25,7 +25,6 @@ int main()
 		for (int j = 0; j < nCromosomos; j++)
 		{
 			Population[i][j] = 2.0 * ((float)rand() / (float)RAND_MAX) - 1.0;
-			
 		}
 	}
 
@@ -38,7 +37,7 @@ int main()
 	}
 	// finaliza com u=20 mas como começa em u=0, temos 21 ciclos
 
-	for (int w = 0; w < 50; w++)
+	for (int w = 0; w < 5000; w++)// loop das interações
 	{
 		/*Agora vamos a usar o RMSE avaliar a nossa população,
 		lembrando que o RMSE vai nos dar um numero, este numero quanto mais perto de zero melhor*/
@@ -81,26 +80,30 @@ int main()
 		// ciclo para as seguintes gerações
 		while (contador < POPULATION_SIZE)
 		{
-
-			// Procura o primeiro pai
-			randValue = (double)rand() / RAND_MAX;
-			for (int i = 0; i < POPULATION_SIZE; i++)
+			pai1 = 0;
+			pai2 = 0;
+			while (pai1 == pai2) //evita valores repetidos
 			{
-				if (randValue <= cumulativeProb[i])
+				// Procura o primeiro pai
+				randValue = (double)rand() / RAND_MAX;
+				for (int i = 0; i < POPULATION_SIZE; i++)
 				{
-					pai1 = i;
-					break;
+					if (randValue <= cumulativeProb[i])
+					{
+						pai1 = i;
+						break;
+					}
 				}
-			}
 
 			
-			randValue = (double)rand() / RAND_MAX;
-			for (int i = 0; i < POPULATION_SIZE; i++)
-			{
-				if (randValue <= cumulativeProb[i])
+				randValue = (double)rand() / RAND_MAX;
+				for (int i = 0; i < POPULATION_SIZE; i++)
 				{
-					pai2 = i;
-					break;
+					if (randValue <= cumulativeProb[i])
+					{
+						pai2 = i;
+						break;
+					}
 				}
 			}
 
@@ -127,7 +130,7 @@ int main()
 			}
 
 			// Fazendo o cruzamento
-			//pai1
+			//gera filho 1
 			if (crossOver[0] == 1)
 			{
 				NextPopulation[contador][0] = Population[pai1][0];
@@ -136,7 +139,7 @@ int main()
 			{
 				NextPopulation[contador][0] = Population[pai2][0];
 			}
-			if (crossOver[0] == 1)
+			if (crossOver[1] == 1)
 			{
 				NextPopulation[contador][1] = Population[pai1][1];
 			}
@@ -144,7 +147,7 @@ int main()
 			{
 				NextPopulation[contador][1] = Population[pai2][1];
 			}
-			if (crossOver[0] == 1)
+			if (crossOver[2] == 1)
 			{
 				NextPopulation[contador][2] = Population[pai1][2];
 			}
@@ -152,7 +155,7 @@ int main()
 			{
 				NextPopulation[contador][2] = Population[pai2][2];
 			}
-			if (crossOver[0] == 1)
+			if (crossOver[3] == 1)
 			{
 				NextPopulation[contador][3] = Population[pai1][3];
 			}
@@ -161,7 +164,7 @@ int main()
 				NextPopulation[contador][3] = Population[pai2][3];
 			}
 
-			//pai2
+			//gera filho 2
 			if (crossOverInv[0] == 1)
 			{
 				NextPopulation[contador + 1][0] = Population[pai1][0];
@@ -170,7 +173,7 @@ int main()
 			{
 				NextPopulation[contador + 1][0] = Population[pai2][0];
 			}
-			if (crossOverInv[0] == 1)
+			if (crossOverInv[1] == 1)
 			{
 				NextPopulation[contador + 1][1] = Population[pai1][1];
 			}
@@ -178,7 +181,7 @@ int main()
 			{
 				NextPopulation[contador + 1][1] = Population[pai2][1];
 			}
-			if (crossOverInv[0] == 1)
+			if (crossOverInv[2] == 1)
 			{
 				NextPopulation[contador + 1][2] = Population[pai1][2];
 			}
@@ -186,7 +189,7 @@ int main()
 			{
 				NextPopulation[contador + 1][2] = Population[pai2][2];
 			}
-			if (crossOverInv[0] == 1)
+			if (crossOverInv[3] == 1)
 			{
 				NextPopulation[contador + 1][3] = Population[pai1][3];
 			}
@@ -195,8 +198,19 @@ int main()
 				NextPopulation[contador + 1][3] = Population[pai2][3];
 			}
 
+			// Sorteio de mutação
+			int aleatMutationPoint = rand() % 3;
+			int decideOcorrenciaMutacao = rand() % 10;
+			if (decideOcorrenciaMutacao == 1 || decideOcorrenciaMutacao == 2)
+			{
+				aleat1 = 2.0 * ((float)rand() / (float)RAND_MAX) - 1.0;
+				aleat2 = 2.0 * ((float)rand() / (float)RAND_MAX) - 1.0;
 
-				contador += 2;
+				NextPopulation[contador][aleatMutationPoint] += aleat1;
+				NextPopulation[contador + 1][aleatMutationPoint] += aleat2;
+			}
+			
+			contador += 2;
 		}
 
 		// copiando a proxima geração para gerar o loop seguinte
@@ -216,14 +230,17 @@ int main()
 
 	
 	
-	int melhorIndice = 1;
+	double melhorRMSE = 1;
+	int indice = 0;
+	double calcMI = 0;
 	for (int i = 0; i < POPULATION_SIZE; i++)
 	{
-		if (Population[i][4] < melhorIndice) {
-			melhorIndice = Population[i][4];
+		if (Population[i][4] < melhorRMSE) {
+			melhorRMSE = Population[i][4];
+			indice = i;
 		}
 	}
-	/*printf("Population[400][4] = %.4lf\n", Population[400][4]);
-	printf("melhor avaliado: %d\n", melhorIndice);
-	printf("%.4lf + %.4lfX - %.4lfX^2 + %.4lfX^3\n", Population[melhorIndice][3], Population[melhorIndice][2], Population[melhorIndice][1], Population[melhorIndice][0]);*/
+	
+	printf("melhor avaliado[%d]: %.5lf\n",indice,melhorRMSE);
+	printf("%.4lf  %.4lfX  %.4lfX^2  %.4lfX^3\n", Population[indice][0], Population[indice][1], Population[indice][2], Population[indice][3]);
 }
