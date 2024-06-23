@@ -9,9 +9,7 @@
 int main()
 {
 	int nCromosomos = 4, pai1, pai2, crossOver[4], crossOverInv[4];
-	float selectionPorcentage;
-	float popFitness[500];
-	double FuncRef[21], FuncCalculada[500], tempRes[21], somatoria = 0,aleat1,aleat2;
+	double FuncRef[21], tempRes[21], somatoria = 0, aleat1, aleat2;
 
 	double cumulativeProb[500], totalFitness = 0, randValue;
 	double Population[POPULATION_SIZE][6], NextPopulation[POPULATION_SIZE][4];
@@ -37,7 +35,7 @@ int main()
 	}
 	// finaliza com u=20 mas como começa em u=0, temos 21 ciclos
 
-	for (int w = 0; w < 5000; w++)// loop das interações
+	for (int w = 0; w < 5; w++) // loop das interações
 	{
 		/*Agora vamos a usar o RMSE avaliar a nossa população,
 		lembrando que o RMSE vai nos dar um numero, este numero quanto mais perto de zero melhor*/
@@ -82,7 +80,7 @@ int main()
 		{
 			pai1 = 0;
 			pai2 = 0;
-			while (pai1 == pai2) //evita valores repetidos
+			while (pai1 == pai2) // evita valores repetidos
 			{
 				// Procura o primeiro pai
 				randValue = (double)rand() / RAND_MAX;
@@ -95,7 +93,6 @@ int main()
 					}
 				}
 
-			
 				randValue = (double)rand() / RAND_MAX;
 				for (int i = 0; i < POPULATION_SIZE; i++)
 				{
@@ -130,78 +127,24 @@ int main()
 			}
 
 			// Fazendo o cruzamento
-			//gera filho 1
-			if (crossOver[0] == 1)
-			{
-				NextPopulation[contador][0] = Population[pai1][0];
-			}
-			else
-			{
-				NextPopulation[contador][0] = Population[pai2][0];
-			}
-			if (crossOver[1] == 1)
-			{
-				NextPopulation[contador][1] = Population[pai1][1];
-			}
-			else
-			{
-				NextPopulation[contador][1] = Population[pai2][1];
-			}
-			if (crossOver[2] == 1)
-			{
-				NextPopulation[contador][2] = Population[pai1][2];
-			}
-			else
-			{
-				NextPopulation[contador][2] = Population[pai2][2];
-			}
-			if (crossOver[3] == 1)
-			{
-				NextPopulation[contador][3] = Population[pai1][3];
-			}
-			else
-			{
-				NextPopulation[contador][3] = Population[pai2][3];
-			}
+			// gera filho 1
+			// este é outro formato de if/else, não se assuste!
+			//                              Pergunta               True                  False
+			NextPopulation[contador][0] = crossOver[0] == 1 ? Population[pai1][0] : Population[pai2][0];
+			NextPopulation[contador][1] = crossOver[1] == 1 ? Population[pai1][1] : Population[pai2][1];
+			NextPopulation[contador][2] = crossOver[2] == 1 ? Population[pai1][2] : Population[pai2][2];
+			NextPopulation[contador][3] = crossOver[3] == 1 ? Population[pai1][3] : Population[pai2][3];
 
-			//gera filho 2
-			if (crossOverInv[0] == 1)
-			{
-				NextPopulation[contador + 1][0] = Population[pai1][0];
-			}
-			else
-			{
-				NextPopulation[contador + 1][0] = Population[pai2][0];
-			}
-			if (crossOverInv[1] == 1)
-			{
-				NextPopulation[contador + 1][1] = Population[pai1][1];
-			}
-			else
-			{
-				NextPopulation[contador + 1][1] = Population[pai2][1];
-			}
-			if (crossOverInv[2] == 1)
-			{
-				NextPopulation[contador + 1][2] = Population[pai1][2];
-			}
-			else
-			{
-				NextPopulation[contador + 1][2] = Population[pai2][2];
-			}
-			if (crossOverInv[3] == 1)
-			{
-				NextPopulation[contador + 1][3] = Population[pai1][3];
-			}
-			else
-			{
-				NextPopulation[contador + 1][3] = Population[pai2][3];
-			}
+			// gera filho 2
+			NextPopulation[contador + 1][0] = crossOverInv[0] == 1 ? Population[pai1][0] : Population[pai2][0];
+			NextPopulation[contador + 1][1] = crossOverInv[1] == 1 ? Population[pai1][1] : Population[pai2][1];
+			NextPopulation[contador + 1][2] = crossOverInv[2] == 1 ? Population[pai1][2] : Population[pai2][2];
+			NextPopulation[contador + 1][3] = crossOverInv[3] == 1 ? Population[pai1][3] : Population[pai2][3];
 
 			// Sorteio de mutação
 			int aleatMutationPoint = rand() % 3;
 			int decideOcorrenciaMutacao = rand() % 10;
-			if (decideOcorrenciaMutacao == 1 || decideOcorrenciaMutacao == 2)
+			if (decideOcorrenciaMutacao == 1 || decideOcorrenciaMutacao == 2) // 20% de chance de mutação
 			{
 				aleat1 = 2.0 * ((float)rand() / (float)RAND_MAX) - 1.0;
 				aleat2 = 2.0 * ((float)rand() / (float)RAND_MAX) - 1.0;
@@ -209,7 +152,7 @@ int main()
 				NextPopulation[contador][aleatMutationPoint] += aleat1;
 				NextPopulation[contador + 1][aleatMutationPoint] += aleat2;
 			}
-			
+
 			contador += 2;
 		}
 
@@ -222,25 +165,24 @@ int main()
 			}
 		}
 	}
-	
+
 	for (int h = 0; h < POPULATION_SIZE; h++)
 	{
 		printf("Population[%d] = [%.4lf][%.4lf][%.4lf][%.4lf][%.4lf][%.4lf]\n", h, Population[h][0], Population[h][1], Population[h][2], Population[h][3], Population[h][4], Population[h][5]);
 	}
 
-	
-	
 	double melhorRMSE = 1;
 	int indice = 0;
 	double calcMI = 0;
 	for (int i = 0; i < POPULATION_SIZE; i++)
 	{
-		if (Population[i][4] < melhorRMSE) {
+		if (Population[i][4] < melhorRMSE)
+		{
 			melhorRMSE = Population[i][4];
 			indice = i;
 		}
 	}
-	
-	printf("melhor avaliado[%d]: %.5lf\n",indice,melhorRMSE);
+
+	printf("melhor avaliado[%d]: %.5lf\n", indice, melhorRMSE);
 	printf("%.4lf  %.4lfX  %.4lfX^2  %.4lfX^3\n", Population[indice][0], Population[indice][1], Population[indice][2], Population[indice][3]);
 }
