@@ -4,15 +4,17 @@
 #include <Windows.h>
 
 #define POPULATION_SIZE 500
-#define INTERATIONS 1000
+#define INTERATIONS 6000
+#define taxaElitismo 0.01
 
 int main()
 {
 	int nCromosomos = 4, pai1, pai2, crossOver[4], crossOverInv[4];
 	double FuncRef[21], tempRes[21], somatoria = 0, aleat1, aleat2;
+	double melhorRMSE;
 
 	double cumulativeProb[500], totalFitness = 0, randValue;
-	double Population[POPULATION_SIZE][6], NextPopulation[POPULATION_SIZE][4];
+	double Population[POPULATION_SIZE][5], NextPopulation[POPULATION_SIZE][4];
 	// A ultima casa, vai ser apenas para armazenar puntuações de fitness
 
 	srand(time(NULL));
@@ -23,6 +25,7 @@ int main()
 		for (int j = 0; j < nCromosomos; j++)
 		{
 			Population[i][j] = 2.0 * ((float)rand() / (float)RAND_MAX) - 1.0;
+			//Population[i][j] = ((double)rand() / RAND_MAX) * 100;
 		}
 	}
 
@@ -35,7 +38,7 @@ int main()
 	}
 	// finaliza com u=20 mas como começa em u=0, temos 21 ciclos
 
-	for (int w = 0; w < 5; w++) // loop das interações
+	for (int w = 0; w < INTERATIONS; w++) // loop das interações
 	{
 		/*Agora vamos a usar o RMSE avaliar a nossa população,
 		lembrando que o RMSE vai nos dar um numero, este numero quanto mais perto de zero melhor*/
@@ -55,24 +58,31 @@ int main()
 			{
 				somatoria += pow(FuncRef[z] - tempRes[z], 2);
 			}
-			double rmse = sqrt(somatoria / 21);
+			double rmse = sqrt(somatoria / 21.0);
 
 			// a index 4 é para armazenar os valores de fitness
 			Population[i][4] = rmse;
-			Population[i][5] = 1 - Population[i][4];
-
+			
 			// printf("Population[%d][4] = %lf \n",i, Population[i][4]);
-			// printf("Population[%d][5] = %lf \n", i, Population[i][5]);
-
-			// aqui temos a somatoria dos valores de fitness para utilizar no sorteio via roleta viciada
-			totalFitness += Population[i][5];
+			
 		}
 
-		cumulativeProb[0] = Population[0][5] / totalFitness;
-		for (int i = 1; i < POPULATION_SIZE; i++)
+		if (w > 0) 
 		{
-			cumulativeProb[i] = cumulativeProb[i - 1] + (Population[i][5] / totalFitness);
+			melhorRMSE = 1;
+			int indice = 0;
+			for (int i = 0; i < POPULATION_SIZE; i++)
+			{
+				if (Population[i][4] < melhorRMSE)
+				{
+					melhorRMSE = Population[i][4];
+					indice = i;
+				}
+			}
+			printf("Geracao[%d] = [%.4lf][%.4lf][%.4lf][%.4lf][%.4lf]\n", w ,Population[indice][0], Population[indice][1], Population[indice][2], Population[indice][3], Population[indice][4]);
 		}
+
+		
 
 		int contador = 0;
 		// ciclo para as seguintes gerações
@@ -83,25 +93,9 @@ int main()
 			while (pai1 == pai2) // evita valores repetidos
 			{
 				// Procura o primeiro pai
-				randValue = (double)rand() / RAND_MAX;
-				for (int i = 0; i < POPULATION_SIZE; i++)
-				{
-					if (randValue <= cumulativeProb[i])
-					{
-						pai1 = i;
-						break;
-					}
-				}
-
-				randValue = (double)rand() / RAND_MAX;
-				for (int i = 0; i < POPULATION_SIZE; i++)
-				{
-					if (randValue <= cumulativeProb[i])
-					{
-						pai2 = i;
-						break;
-					}
-				}
+				pai1 = rand() % POPULATION_SIZE;
+				pai2 = rand() % POPULATION_SIZE;
+				
 			}
 
 			/*printf("Pai1 = %d \nPai2 = %d\n", pai1, pai2);
@@ -144,13 +138,33 @@ int main()
 			// Sorteio de mutação
 			int aleatMutationPoint = rand() % 3;
 			int decideOcorrenciaMutacao = rand() % 10;
-			if (decideOcorrenciaMutacao == 1 || decideOcorrenciaMutacao == 2) // 20% de chance de mutação
+			if (decideOcorrenciaMutacao == 1 ) // 10% de chance de mutação
 			{
 				aleat1 = 2.0 * ((float)rand() / (float)RAND_MAX) - 1.0;
 				aleat2 = 2.0 * ((float)rand() / (float)RAND_MAX) - 1.0;
 
 				NextPopulation[contador][aleatMutationPoint] += aleat1;
 				NextPopulation[contador + 1][aleatMutationPoint] += aleat2;
+			}
+
+			int numElite = (int)(taxaElitismo * POPULATION_SIZE);
+
+			for (int i = 0; i < numElite; i++)
+			{
+				int melhor = 0;
+
+				for (int j = 1; j < POPULATION_SIZE; j++)
+				{
+					if (Population[j][4] < Population[melhor][4])
+					{
+						melhor = j;
+					}
+				}
+
+				for (int k = 0; k < nCromosomos; k++)
+				{
+					Population[i][k] = NextPopulation[melhor][k];
+				}
 			}
 
 			contador += 2;
@@ -166,14 +180,15 @@ int main()
 		}
 	}
 
-	for (int h = 0; h < POPULATION_SIZE; h++)
+
+
+	/*for (int h = 0; h < POPULATION_SIZE; h++)
 	{
 		printf("Population[%d] = [%.4lf][%.4lf][%.4lf][%.4lf][%.4lf][%.4lf]\n", h, Population[h][0], Population[h][1], Population[h][2], Population[h][3], Population[h][4], Population[h][5]);
-	}
+	}*/
 
-	double melhorRMSE = 1;
+	melhorRMSE = 1;
 	int indice = 0;
-	double calcMI = 0;
 	for (int i = 0; i < POPULATION_SIZE; i++)
 	{
 		if (Population[i][4] < melhorRMSE)
